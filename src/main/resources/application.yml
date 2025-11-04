@@ -28,7 +28,7 @@ spring:
 
   cloud:
     function:
-      definition: paymentAcceptedSupplier
+      definition: paymentAcceptedSupplier;paymentRejectedSupplier
     stream:
       bindings:
         paymentAcceptedSupplier-out-0:
@@ -42,3 +42,25 @@ management:
     web:
       exposure:
         include: busrefresh
+
+resilience4j:
+  retry:
+    instances:
+      orderServiceBackoffRetry:
+        maxAttempts: 4
+        waitDuration: 1000
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2.0
+        exponentialBackoffMaxWait: 5000
+        retryExceptions:
+          - feign.FeignException
+
+circuitbreaker:
+  instances:
+    orderServiceCircuitBreaker:
+      failureRateThreshold: 50
+      waitDurationInOpenState: 30s
+      slidingWindowType: COUNT_BASED
+      slidingWindowSize: 10
+      recordExceptions:
+        - feign.FeignException

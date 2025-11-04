@@ -30,13 +30,14 @@ public class Payment {
 
     public Payment(Double amount, String orderId) {
         this.amount = amount;
-        this.currency = currency;
-        this.paymentType = paymentType;
         this.orderId = orderId;
 
     }
     public void switchToCanceled(){
         this.status=PaymentStatus.CANCELED;
+    }
+    public void switchToAcceptedPendingOrderConfirmation(){
+        this.status=PaymentStatus.ACCEPTED_PENDING_ORDER_CONFIRMATION;
     }
     public void switchToAccepted(){
         this.status=PaymentStatus.APPROVED;

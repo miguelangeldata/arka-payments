@@ -14,7 +14,7 @@ COPY src /app/src
 
 RUN gradle clean build -x test --no-daemon
 
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jre-alpine
 
 
 RUN apt-get update && apt-get install -y ca-certificates && apt-get clean
