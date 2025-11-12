@@ -17,7 +17,9 @@ RUN gradle clean build -x test --no-daemon
 FROM eclipse-temurin:21-jre-alpine
 
 
-RUN apt-get update && apt-get install -y ca-certificates && apt-get clean
+RUN apk update && \
+    apk add --no-cache ca-certificates && \
+    rm -rf /var/cache/apk/*
 
 WORKDIR /app
 EXPOSE 8083

@@ -1,8 +1,6 @@
 package com.arka.payments.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,7 +21,8 @@ public class Payment {
     private String userId;
     private String userEmail;
     private LocalDateTime createAt=LocalDateTime.now();
-    private String paymentType;
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentType;
     private String currency;
     private Double amount;
     private PaymentStatus status=PaymentStatus.PENDING;

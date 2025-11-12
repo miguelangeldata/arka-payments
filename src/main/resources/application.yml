@@ -1,7 +1,8 @@
 server:
   port: 8083
-
 spring:
+  application:
+    name: payments-service
   datasource:
     url: jdbc:postgresql://host.docker.internal:5432/payments
     username: postgres
@@ -41,7 +42,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: busrefresh
+        include: busrefresh, prometheus
+    prometheus:
+      enabled: true
 
 resilience4j:
   retry:
@@ -64,3 +67,34 @@ circuitbreaker:
       slidingWindowSize: 10
       recordExceptions:
         - feign.FeignException
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    hostname: localhost
+    instance-id: ${spring.application.name}:${server.port}
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  group-configs:
+    - group: payments
+      paths-to-match: /payments/**
+      packages-to-scan: com.arka.payments
+
+  endpoint:
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: prometheus

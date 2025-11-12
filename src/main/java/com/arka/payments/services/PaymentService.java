@@ -10,8 +10,10 @@ import com.arka.payments.feign.OrderClient;
 import com.arka.payments.mapper.PaymentMapper;
 import com.arka.payments.models.Payment;
 import com.arka.payments.models.PaymentStatus;
+import com.arka.payments.models.PaymentType;
 import com.arka.payments.publisher.PaymentPublisher;
 import com.arka.payments.repository.PaymentJpaRepository;
+import com.arka.payments.resources.MetricsOfPayments;
 import com.arka.payments.resources.PaymentAmount;
 import com.arka.payments.resources.PaymentRefund;
 import com.arka.payments.resources.PaymentRequest;
@@ -22,8 +24,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -63,7 +69,8 @@ public class PaymentService {
         } catch (OrderException e) {
             log.warning("Order service error, payment pending confirmation. ID: "
                     + transactionId + ". Max retries exceeded.");
-
+            payment.switchToAcceptedPendingOrderConfirmation();
+            repository.save(payment);
         }
         return payment.getId();
     }
@@ -123,6 +130,61 @@ public class PaymentService {
         log.severe("Payment creation failed after resiliency patterns. Cause: "
                 + e.getClass().getSimpleName() + " - " + e.getMessage());
         throw new PaymentFailedException("Payment initiation failed due to infrastructure error (CB/Retry failure).", e);
+    }
+
+    ///Reports //
+    public MetricsOfPayments metricsOfPayments(){
+
+        List<Payment> payments=getAllPayments();
+        DoubleSummaryStatistics statistics = paymentStats(payments);
+        Integer total=totalPayments(payments);
+        Integer totalAccepted=totalPaymentsAccepted(payments);
+        Integer totalCanceled=totalPaymentsCanceled(payments);
+        Integer totalDeclined=totalPaymentsDenied(payments);
+        Integer totalPaymentByCreditCard=totalPaymentsByCreditCard(payments);
+        Integer totalPaymentByPaypal=totalPaymentsByPaypal(payments);
+        Integer totalByPse=totalPaymentsByPse(payments);
+        Double max= statistics.getMax();
+        Double min= statistics.getMin();
+        Double sum= statistics.getSum();
+        Double avg=statistics.getAverage();
+        return new MetricsOfPayments(
+                total,totalAccepted,totalCanceled,totalDeclined,
+                totalPaymentByCreditCard,totalPaymentByPaypal,totalByPse,
+                max,min,sum,avg);
+    }
+    public DoubleSummaryStatistics paymentStats(List<Payment> payments){
+
+        return payments.stream()
+                .collect(Collectors.summarizingDouble(Payment::getAmount));
+
+    }
+    private Integer totalPayments(List<Payment> payments){
+        return payments.size();
+    }
+    private Integer totalPaymentsAccepted(List<Payment> payments){
+        return Math.toIntExact(payments.stream().filter
+                (payment -> payment.getStatus().equals(PaymentStatus.APPROVED)).count());
+    }
+    private Integer totalPaymentsCanceled(List<Payment> payments){
+        return Math.toIntExact(payments.stream().filter
+                (payment -> payment.getStatus().equals(PaymentStatus.CANCELED)).count());
+    }
+    private Integer totalPaymentsDenied(List<Payment> payments){
+        return Math.toIntExact(payments.stream().filter
+                (payment -> payment.getStatus().equals(PaymentStatus.DECLINED)).count());
+    }
+    private Integer totalPaymentsByCreditCard(List<Payment> payments){
+        return Math.toIntExact(payments.stream().filter
+                (payment -> payment.getPaymentType().equals(PaymentType.CreditCard)).count());
+    }
+    private Integer totalPaymentsByPaypal(List<Payment> payments){
+        return Math.toIntExact(payments.stream().filter
+                (payment -> payment.getPaymentType().equals(PaymentType.Paypal)).count());
+    }
+    private Integer totalPaymentsByPse(List<Payment> payments){
+        return Math.toIntExact(payments.stream().filter
+                (payment -> payment.getPaymentType().equals(PaymentType.Pse)).count());
     }
 
 }
