@@ -1,23 +1,15 @@
 plugins {
     id 'java'
-
     id 'org.springframework.boot' version '3.3.2'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.arka'
 version = '0.0.1-SNAPSHOT'
-description = 'Demo project for Spring Boot'
-
+description = 'Payments Service'
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
     }
 }
 
@@ -25,29 +17,34 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation platform('org.springframework.cloud:spring-cloud-dependencies:2023.0.3')
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+ext {
+    set('springCloudVersion', "2023.0.3")
+}
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
     implementation 'org.springframework.cloud:spring-cloud-stream'
     implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
     implementation 'org.springframework.cloud:spring-cloud-bus'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
-
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
-
-
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-
-    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
