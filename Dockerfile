@@ -1,30 +1,31 @@
+
 FROM gradle:8.5-jdk21-alpine AS build
 WORKDIR /app
 
 
-COPY build.gradle settings.gradle /app/
-COPY gradle /app/gradle
+COPY gradlew ./
+COPY gradlew.bat ./
+COPY gradle ./gradle
 
 
-RUN gradle dependencies --no-daemon
+COPY build.gradle settings.gradle ./
 
+RUN chmod +x gradlew
 
-COPY src /app/src
+RUN ./gradlew build --dry-run --no-daemon || true
 
+COPY src ./src
 
-RUN gradle clean build -x test --no-daemon
+RUN ./gradlew clean build -x test --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
 
-
-RUN apk update && \
-    apk add --no-cache ca-certificates && \
+RUN apk add --no-cache ca-certificates && \
     rm -rf /var/cache/apk/*
 
-WORKDIR /app
 EXPOSE 8083
-
 
 COPY --from=build /app/build/libs/*.jar app.jar
 
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]
