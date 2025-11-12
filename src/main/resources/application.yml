@@ -15,7 +15,7 @@ spring:
     show-sql: true
 
   rabbitmq:
-    host: localhost
+    host: rabbitmq
     port: 5672
     username: guest
     password: guest
@@ -23,9 +23,9 @@ spring:
       simple:
         auto-startup: false
 
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+    autoconfigure:
+      exclude:
+        - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
   cloud:
     function:
@@ -71,12 +71,12 @@ circuitbreaker:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://eureka-server:8761/eureka
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    hostname: localhost
+    hostname: payments
     instance-id: ${spring.application.name}:${server.port}
 
 springdoc:
@@ -90,11 +90,3 @@ springdoc:
     - group: payments
       paths-to-match: /payments/**
       packages-to-scan: com.arka.payments
-
-  endpoint:
-    prometheus:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: prometheus
